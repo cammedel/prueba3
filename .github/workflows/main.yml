@@ -35,7 +35,7 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t prueba2-app .
+        run: docker build -t prueba2-app -f deployment/Dockerfile .
 
       - name: Deploy to simulated environment
         run: docker compose -f docker-compose.yml up -d
