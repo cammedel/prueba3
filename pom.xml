@@ -111,10 +111,17 @@
 			</execution>
 			<execution>
 			<id>report</id>
-			<phase>test</phase>
+			<phase>verify</phase>
 			<goals>
 			<goal>report</goal>
 			</goals>
+			<configuration>
+			<outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+			<reportFormats>
+			<reportFormat>HTML</reportFormat>
+			<reportFormat>XML</reportFormat>
+			</reportFormats>
+			</configuration>
 			</execution>
 			</executions>
 			</plugin>
