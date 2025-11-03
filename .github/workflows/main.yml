@@ -28,9 +28,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn verify sonar:sonar \
-            -Dsonar.projectKey=narutouzumaki_Prueba2 \
-            -Dsonar.organization=narutouzumaki \
+          mvn clean verify sonar:sonar \
+            -Dsonar.organization=cammedel \
+            -Dsonar.projectKey=cammedel_Prueba2 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
@@ -42,4 +42,5 @@ jobs:
 
       - name: Clean up
         if: always()
-        run: docker compose -f docker-compose.yml down
+        run: |
+          docker compose -f docker-compose.yml down || true
