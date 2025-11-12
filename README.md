@@ -39,8 +39,9 @@ Se utiliza un pipeline de github actions como herramienta para poder automatizar
     verde: Código Limpio
     amarillo: Código intermedio puede obtener mejoras
     rojo: Código con errores graves.
-
+3. Se utiliza Snyk para poder garantizar la seguridad de los proyectos y futuros proyectos, para que funcione snyk como primera instancia se deben descargar las dependencias en el proyecto, luego se debe crear una cuenta en Snyk para buscar la api token. Esta se debe guardar como secreto al igual que en Sonarcloud, en nuestro github.
 ## Trazabilidad 
 
 Este se garantiza al momento de que el codigo sea vinculado con nuestro despliegue (Docker).
+
 
