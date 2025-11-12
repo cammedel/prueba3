@@ -45,7 +45,8 @@ jobs:
       - name: Authenticate Snyk CLI
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk auth $SNYK_TOKEN
+        run: snyk config set api=$SNYK_TOKEN
+
 
       - name: Snyk test Java dependencies
         run: snyk test --severity-threshold=high
