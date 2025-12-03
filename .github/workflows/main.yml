@@ -58,6 +58,7 @@ jobs:
       - name: Start Docker stack
         working-directory: deployment
         run: |
+          docker network create deployment-observabilidad_monitoring || true
           docker compose down || true
           docker compose up -d
 
