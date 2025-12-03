@@ -57,27 +57,30 @@ jobs:
       - name: Start Docker stack
         working-directory: deployment
         run: |
-          # El comando '|| true' evita que el pipeline falle si la red ya existe.
+          # Crear red si no existe
           docker network create deployment-observabilidad_monitoring || true
+          
+          # Limpiar contenedores anteriores
           docker compose down -v || true
-          # Arrancar los servicios en segundo plano
-          docker compose up -d
+          
+          echo "🚀 Levantando servicios..."
+          # Intentar levantar servicios. Si falla, mostrar logs de Oracle para depurar.
+          docker compose up -d || (echo "❌ Error al levantar Docker. Mostrando logs de Oracle:" && docker compose logs oracle-db && exit 1)
 
-      # PASO CLAVE: Bucle de reintento para esperar a que los servicios respondan.
+      # Script corregido para verificar salud de servicios
       - name: Wait and Check Services Health
         run: |
           wait_for_service() {
             local service_name=$1
             local url=$2
-            local max_attempts=15 # 15 intentos * 5 segundos = 75 segundos máx.
+            local max_attempts=15 # 15 intentos * 5 segundos = 75 segundos
             local wait_time=5
             local current_attempt=0
 
             echo "⏳ Esperando a que ${service_name} ($url) arranque. Máx ${max_attempts} intentos."
 
             while [ $current_attempt -lt $max_attempts ]; do
-              # Intenta conectar. Usamos --fail para fallar si el código HTTP es >= 400
-              # o si hay error de conexión (código 7).
+              # --fail hace que curl falle si el HTTP code es error
               curl -s --fail $url > /dev/null 2>&1
               
               if [ $? -eq 0 ]; then
@@ -86,7 +89,7 @@ jobs:
               fi
               
               current_attempt=$((current_attempt + 1))
-              echo "Reintento $current_attempt/${max_attempts}. ${service_name} aún no responde. Esperando ${wait_time}s..."
+              echo "Reintento $current_attempt/${max_attempts}. ${service_name} no responde. Esperando ${wait_time}s..."
               sleep $wait_time
             done
 
@@ -94,13 +97,13 @@ jobs:
             return 1
           }
 
-          echo "🏥 Verificando estado de los servicios..."
+          echo "🏥 Verificando estado de los servicios de monitoreo..."
           
-          # 1. Verificar Prometheus (Puerto 9090)
+          # Verificar Prometheus
           wait_for_service "Prometheus" "http://localhost:9090/-/healthy"
           if [ $? -ne 0 ]; then exit 1; fi
           
-          # 2. Verificar Grafana (Puerto 3000)
+          # Verificar Grafana
           wait_for_service "Grafana" "http://localhost:3000/api/health"
           if [ $? -ne 0 ]; then exit 1; fi
 
