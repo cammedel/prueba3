@@ -6,7 +6,7 @@ services:
       - "1522:1521"
     environment:
       ORACLE_PASSWORD: OraclePassword123
-      ORACLE_DATABASE: XEPDB1
+      ORACLE_DATABASE: PRUEBADB
     volumes:
       - oracle-data:/opt/oracle/oradata
     networks:
