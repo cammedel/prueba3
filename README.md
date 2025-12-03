@@ -1,47 +1,54 @@
-## Instrucciones de como inicializar proyecto 
+## Instrucciones para inicializar el proyecto
 
-Este proyeto es un microservicio de springboot-java.
+Este proyecto es un microservicio construido con Spring Boot y Java.
 
+## Requisitos previos
 
-## Requisitos de para su uso
+- GitHub
+- Docker y Docker Compose
+- Maven
 
-Necesitarás las técnologias de
--> Git hub
--> Docker y Docker Compose 
--> Maven 
+## Pasos iniciales
 
-## Pasos 
+1. Clonar el repositorio con `git clone <url>`.
+2. Entrar en la carpeta del proyecto con `cd <nombre-proyecto>`.
 
-1. Clonar repositorio con Git Clone (nombre de tu repositorio a utilizar) en VS
-2. Utilizarás cd (nombre del proyecto) para entrar a la carpeta
+## Despliegue local
 
-## Despliegue
+Se recomienda utilizar Docker para el despliegue, por lo que es necesario tener Docker Desktop instalado.
 
-En este proyecto se recomienda utilizar docker para el despliegue, por lo tanto, debes tener instalado en tu pc, esta plataforma nos permite ejecutar aplicaciones en contenedores.
+1. (Opcional) Crear la carpeta `deployment` para los artefactos de Docker.
+2. Crear los archivos de despliegue (`Dockerfile`, `docker-compose.yml`).
+3. Comandos habituales:
+   - `docker compose up --build -d`
+   - `docker compose up`
+   - `docker compose ps`
 
-3. (Opcional) crear carpeta deployment para archivos de Docker 
-4. Crear archivos para la ejecución del despliegue
--Dockerfile
--docker-compose.yml
-5. Comandos: docker-compose up --build -d (construir imágen)
-   docker compose up
-   docker-compose ps 
+## Pruebas automatizadas con pipeline
 
+El pipeline de GitHub Actions automatiza la calidad y la trazabilidad del microservicio.
 
-## Pruebas automatizadas con pipeline 
+1. Jacoco ejecuta las pruebas unitarias. En el `pom.xml` esta configurado el plugin necesario. Comandos: `mvn test`, `mvn verify`. El reporte puede abrirse en `target/site/jacoco/index.html`.
+2. SonarCloud verifica la calidad del codigo usando los resultados de Jacoco. Se configuro con una cuenta en SonarCloud y un token almacenado como secreto (`SONAR_TOKEN`).
+3. Snyk analiza la seguridad de las dependencias. Requiere descargar las dependencias, crear una cuenta y guardar el token (`SNYK_TOKEN`) como secreto en GitHub.
 
-Se utiliza un pipeline de github actions como herramienta para poder automatizar la calidad y trazabilidad del microservicio
+## Integracion en CI/CD y toma de decisiones (IE4)
 
-1. Se utiliza Jacoco que ejecuta las pruebas unitarias, en POM.Xl se debe encontrar el código entre pluggins que nos permite ejecutar las pruebas   
-   Comandos: mvn test, mvn verify.
-   abrir archivo (target/site/jacoco/index.html)
-2. Se utiliza SonarCloud para poder verificar la calidad de nuestro código mediante distintos colores. Se configuro con una cuenta en sonarcloud y token.
-    verde: Código Limpio
-    amarillo: Código intermedio puede obtener mejoras
-    rojo: Código con errores graves.
-3. Se utiliza Snyk para poder garantizar la seguridad de los proyectos y futuros proyectos, para que funcione snyk como primera instancia se deben descargar las dependencias en el proyecto, luego se debe crear una cuenta en Snyk para buscar la api token. Esta se debe guardar como secreto al igual que en Sonarcloud, en nuestro github.
-## Trazabilidad 
+El workflow `.github/workflows/main.yml` corre en cada push o pull request e integra pruebas, seguridad y despliegue:
 
-Este se garantiza al momento de que el codigo sea vinculado con nuestro despliegue (Docker).
+- `mvn clean verify` valida la calidad y genera los reportes que usa Jacoco/Sonar. Si las pruebas fallan, el job termina y no se continua.
+- SonarCloud aplica las Quality Gates. Cuando se incumplen umbrales de cobertura o se detectan code smells criticos, el paso falla y bloquea el merge, guiando decisiones sobre deuda tecnica.
+- Snyk usa `SNYK_TOKEN` para autenticarse, escanea dependencias Maven y adjunta un reporte JSON. Vulnerabilidades de severidad alta devuelven un exit code distinto de cero y detienen el pipeline hasta que se actualicen dependencias o se justifique una excepcion.
+- Solo si todo lo anterior pasa se construye la imagen Docker (`docker build -t prueba2-app -f deployment/Dockerfile .`) y se levanta el stack en `deployment/` con `docker compose up -d`. Un error en el arranque corta el pipeline y evita liberar versiones inestables.
 
+### Evidencia de detencion ante fallas criticas
 
+- Si una prueba unitaria falla o hay errores de compilacion, `mvn clean verify` devuelve error y los pasos posteriores no se ejecutan. El pipeline se marca como `failed`, demostrando el control de calidad.
+- Si Snyk detecta vulnerabilidades de severidad alta, el comando `snyk test` falla. Al no usar `continue-on-error`, el workflow se detiene antes del despliegue, cumpliendo el requisito de seguridad.
+- Si `docker compose up -d` no puede levantar los contenedores (por puertos ocupados o healthchecks fallidos), el paso termina en error y el job se corta, dejando registro para decidir la correccion.
+
+Estas herramientas aportan metricas y bloqueos automaticos que informan decisiones tecnicas sobre la aceptacion de un cambio o su despliegue (criterio IE4).
+
+## Trazabilidad
+
+La trazabilidad se garantiza al vincular el codigo con el despliegue en Docker mediante el pipeline descrito.
