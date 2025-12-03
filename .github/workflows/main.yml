@@ -66,6 +66,9 @@ jobs:
           echo "🚀 Levantando servicios..."
           # Intentar levantar servicios. Si falla, mostrar logs de Oracle para depurar.
           docker compose up -d || (echo "❌ Error al levantar Docker. Mostrando logs de Oracle:" && docker compose logs oracle-db && exit 1)
+          cd deployment-observabilidad
+          docker compose up -d
+          cd ..
 
       # Script corregido para verificar salud de servicios
       - name: Wait and Check Services Health
