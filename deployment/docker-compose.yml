@@ -15,9 +15,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "healthcheck.sh"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      interval: 20s      # Revisar cada 20 segundos
+      timeout: 30s       # Esperar hasta 30s por respuesta (Oracle es lento)
+      retries: 10        # Intentar 10 veces (antes eran 5)
+      start_period: 120s # ¡CRÍTICO! Esperar 2 minutos antes de contar fallos
 
   bdget-app:
     build:
